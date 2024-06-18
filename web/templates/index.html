@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Trip Status</title>
+</head>
+<body>
+    <h1>Update Trip Status</h1>
+    <form id="statusForm">
+        <label for="status">Status:</label>
+        <input type="text" id="status" name="status"><br><br>
+        <label for="location">Location:</label>
+        <input type="text" id="location" name="location"><br><br>
+        <label for="return_date">Return Date:</label>
+        <input type="text" id="return_date" name="return_date"><br><br>
+        <button type="submit">Update</button>
+    </form>
+
+    <script>
+        document.getElementById('statusForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const status = document.getElementById('status').value;
+            const location = document.getElementById('location').value;
+            const return_date = document.getElementById('return_date').value;
+
+            fetch('/update_status', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    status: status,
+                    location: location,
+                    return_date: return_date
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                alert('Status updated successfully!');
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+</body>
+</html>
