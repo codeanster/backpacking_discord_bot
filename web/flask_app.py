@@ -1,11 +1,11 @@
 import os
-from flask import Flask, request, jsonify, render_template, send_from_directory
-from flask_cors import CORS  # This is required for handling CORS if needed
+import logging
+from flask import Flask, request, jsonify, render_template, send_from_directory, abort
 from werkzeug.utils import secure_filename
 from PIL import Image
+from twilio.twiml.messaging_response import MessagingResponse
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS on all routes, adjust if needed
 
 # Configuration for file uploads
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -21,10 +21,13 @@ trip_status = {
     'photo_url': ''
 }
 
+# Setup logging
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(levelname)s %(message)s')
+
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-def compress_image(image_path, output_path, quality=85):
+def compress_image(image_path, output_path, quality=20):
     with Image.open(image_path) as img:
         img.save(output_path, "JPEG", quality=quality)
 
@@ -67,6 +70,18 @@ def upload_photo():
         return jsonify(trip_status)
     return jsonify({"error": "File type not allowed"}), 400
 
+@app.route('/delete_photo', methods=['POST'])
+def delete_photo():
+    photo_url = trip_status.get('photo_url', '')
+    if photo_url:
+        filename = os.path.basename(photo_url)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        trip_status['photo_url'] = ''
+        return jsonify({"message": "Photo deleted", "photo_url": ''})
+    return jsonify({"error": "No photo to delete"}), 400
+
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
@@ -74,6 +89,21 @@ def uploaded_file(filename):
 @app.route('/status', methods=['GET'])
 def get_status():
     return jsonify(trip_status)
+
+@app.route("/sms", methods=['POST'])
+def sms_reply():
+    """Process the incoming message and extract lat and lon from the URL found in the message."""
+    # Get the message the user sent to our Twilio number
+    body = request.values.get('Body', None)
+    logging.info(f'Message Body: {body}')
+
+    # Respond with a message
+    resp = MessagingResponse()
+
+    #send response
+    resp.message("Failed to retrieve coordinates. Please check the URL.")
+
+    return str(resp)
 
 if __name__ == '__main__':
     if not os.path.exists(UPLOAD_FOLDER):

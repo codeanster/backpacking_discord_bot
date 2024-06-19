@@ -25,7 +25,7 @@ bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 # Create an instance of app_commands.CommandTree for handling slash commands
 tree = bot.tree
 
-FLASK_API_URL = 'http://127.0.0.1:5000/status'
+FLASK_API_URL = 'https://codeanster.pythonanywhere.com/status'
 
 # Define trip_status globally
 trip_status = {}
@@ -56,6 +56,7 @@ async def status(interaction: discord.Interaction):
         async with session.get(FLASK_API_URL) as response:
             if response.status == 200:
                 trip_status = await response.json()
+                print(trip_status)
                 status_message = (f"Current Status: {trip_status['status']}\n"
                                   f"Location: {trip_status['location']}\n"
                                   f"Estimated Return: {trip_status['return_date']}\n"
@@ -73,18 +74,5 @@ async def status(interaction: discord.Interaction):
                     await interaction.response.send_message(status_message)
             else:
                 await interaction.response.send_message("Failed to retrieve status.")
-
-@tree.command(name='return', description='Set the estimated return date')
-@app_commands.describe(date='The estimated return date')
-async def return_date(interaction: discord.Interaction, date: str):
-    trip_status['return_date'] = date
-    await interaction.response.send_message(f"Updated return date to {date}")
-
-@tree.command(name='set_trip', description='Set the trip status and location')
-@app_commands.describe(status='The status of the trip', location='The current location')
-async def set_trip(interaction: discord.Interaction, status: str, location: str):
-    trip_status['status'] = status
-    trip_status['location'] = location
-    await interaction.response.send_message(f"Trip status updated to {status} at {location}")
 
 bot.run(DISCORD_TOKEN)

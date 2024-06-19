@@ -22,6 +22,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Uploaded Photo</h5>
                     <img id="uploadedPhoto" src="{{ trip_status['photo_url'] }}" alt="No photo uploaded" class="img-fluid">
+                    <button id="deletePhotoBtn" class="btn btn-danger mt-3">Delete Photo</button>
                 </div>
             </div>
         </div>
@@ -101,6 +102,20 @@ $(document).ready(function() {
             },
             error: function(xhr) {
                 alert("Error uploading photo: " + xhr.responseText);
+            }
+        });
+    });
+
+    $("#deletePhotoBtn").click(function() {
+        $.ajax({
+            type: "POST",
+            url: "/delete_photo",
+            success: function(data) {
+                $("#uploadedPhoto").attr("src", "");
+                // alert(data.message);
+            },
+            error: function(xhr) {
+                alert("Error deleting photo: " + xhr.responseText);
             }
         });
     });

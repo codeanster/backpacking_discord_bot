@@ -5,8 +5,6 @@ A Discord bot to help manage and share your backpacking trips and statuses. Incl
 ## Features
 
 - **/status**: Get current trip status, location, and estimated return date.
-- **/return**: Update your estimated return date.
-- **/set_trip**: Update your trip status and location.
 
 ## Setup
 
