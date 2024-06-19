@@ -18,12 +18,6 @@
                     <p class="card-text">Status: <span id="currentStatus">{{ trip_status['status'] }}</span></p>
                     <p class="card-text">Location: <span id="currentLocation">{{ trip_status['location'] }}</span></p>
                     <p class="card-text">Return Date: <span id="currentReturnDate">{{ trip_status['return_date'] }}</span></p>
-                    <button id="updateStatusBtn" class="btn btn-primary">Update Status</button>
-                    <div class="mt-3">
-                        <button class="quick-update btn btn-secondary" data-status="arrived" data-location="current location">Arrived</button>
-                        <button class="quick-update btn btn-secondary" data-status="departing" data-location="new location">Departing</button>
-                        <button class="quick-update btn btn-secondary" data-status="resting" data-location="current location">Resting</button>
-                    </div>
                 </div>
                 <div class="card-body">
                     <h5 class="card-title">Uploaded Photo</h5>
@@ -67,11 +61,10 @@
 </div>
 <script>
 $(document).ready(function() {
-    $("#updateStatusBtn").click(function(event) {
-        event.preventDefault();  // Prevent the default button click behavior
-
+    $("#tripForm").submit(function(event) {
+        event.preventDefault();
         var formData = {
-            status: $("#statusInput").val(),  // Ensure these IDs match your input fields
+            status: $("#statusInput").val(),
             location: $("#locationInput").val(),
             return_date: $("#dateInput").val()
         };
@@ -82,34 +75,6 @@ $(document).ready(function() {
             data: JSON.stringify(formData),
             contentType: "application/json",
             success: function(data) {
-                // Update the display on the page
-                $("#currentStatus").text(data.status);
-                $("#currentLocation").text(data.location);
-                $("#currentReturnDate").text(data.return_date);
-            },
-            error: function(xhr) {
-                alert("Error updating status: " + xhr.responseText);
-            }
-        });
-    });
-
-    $(".quick-update").click(function(event) {
-        var status = $(this).data("status");
-        var location = $(this).data("location");
-
-        var formData = {
-            status: status,
-            location: location,
-            return_date: $("#currentReturnDate").text()
-        };
-
-        $.ajax({
-            type: "POST",
-            url: "/update_status",
-            data: JSON.stringify(formData),
-            contentType: "application/json",
-            success: function(data) {
-                // Update the display on the page
                 $("#currentStatus").text(data.status);
                 $("#currentLocation").text(data.location);
                 $("#currentReturnDate").text(data.return_date);
@@ -122,7 +87,6 @@ $(document).ready(function() {
 
     $("#photoForm").submit(function(event) {
         event.preventDefault();
-
         var formData = new FormData();
         formData.append('photo', $("#photoInput")[0].files[0]);
 
@@ -133,7 +97,6 @@ $(document).ready(function() {
             processData: false,
             contentType: false,
             success: function(data) {
-                // Update the displayed photo
                 $("#uploadedPhoto").attr("src", data.photo_url);
             },
             error: function(xhr) {

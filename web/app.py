@@ -34,12 +34,11 @@ def index():
 
 @app.route('/update_status', methods=['POST'])
 def update_status():
-    # Handling JSON data for AJAX
-    data = request.get_json()  # Using get_json() to properly parse incoming JSON data
+    data = request.get_json()
     if data:
-        trip_status['status'] = data.get('status', trip_status['status'])
-        trip_status['location'] = data.get('location', trip_status['location'])
-        trip_status['return_date'] = data.get('return_date', trip_status['return_date'])
+        for key in ['status', 'location', 'return_date']:
+            if key in data:
+                trip_status[key] = data[key]
         return jsonify(trip_status)
     return jsonify({"error": "No data provided"}), 400
 
