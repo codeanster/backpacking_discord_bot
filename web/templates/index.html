@@ -3,48 +3,145 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Update Trip Status</title>
+    <title>Trip Status Dashboard</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 </head>
 <body>
-    <h1>Update Trip Status</h1>
-    <form id="statusForm">
-        <label for="status">Status:</label>
-        <input type="text" id="status" name="status"><br><br>
-        <label for="location">Location:</label>
-        <input type="text" id="location" name="location"><br><br>
-        <label for="return_date">Return Date:</label>
-        <input type="text" id="return_date" name="return_date"><br><br>
-        <button type="submit">Update</button>
-    </form>
+<div class="container mt-3">
+    <h2 class="mb-3">Trip Status Dashboard</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Current Trip Status</h5>
+                    <p class="card-text">Status: <span id="currentStatus">{{ trip_status['status'] }}</span></p>
+                    <p class="card-text">Location: <span id="currentLocation">{{ trip_status['location'] }}</span></p>
+                    <p class="card-text">Return Date: <span id="currentReturnDate">{{ trip_status['return_date'] }}</span></p>
+                    <button id="updateStatusBtn" class="btn btn-primary">Update Status</button>
+                    <div class="mt-3">
+                        <button class="quick-update btn btn-secondary" data-status="arrived" data-location="current location">Arrived</button>
+                        <button class="quick-update btn btn-secondary" data-status="departing" data-location="new location">Departing</button>
+                        <button class="quick-update btn btn-secondary" data-status="resting" data-location="current location">Resting</button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Uploaded Photo</h5>
+                    <img id="uploadedPhoto" src="{{ trip_status['photo_url'] }}" alt="No photo uploaded" class="img-fluid">
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Update Trip Information</h5>
+                    <form id="tripForm">
+                        <div class="form-group">
+                            <label for="statusInput">Status</label>
+                            <input type="text" class="form-control" id="statusInput" placeholder="Enter status">
+                        </div>
+                        <div class="form-group">
+                            <label for="locationInput">Location</label>
+                            <input type="text" class="form-control" id="locationInput" placeholder="Enter location">
+                        </div>
+                        <div class="form-group">
+                            <label for="dateInput">Return Date</label>
+                            <input type="date" class="form-control" id="dateInput">
+                        </div>
+                        <button type="submit" class="btn btn-success">Submit</button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    <h5 class="card-title">Upload Photo</h5>
+                    <form id="photoForm" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="photoInput">Choose Photo</label>
+                            <input type="file" class="form-control-file" id="photoInput">
+                        </div>
+                        <button type="submit" class="btn btn-info">Upload</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+$(document).ready(function() {
+    $("#updateStatusBtn").click(function(event) {
+        event.preventDefault();  // Prevent the default button click behavior
 
-    <script>
-        document.getElementById('statusForm').addEventListener('submit', function(event) {
-            event.preventDefault();
+        var formData = {
+            status: $("#statusInput").val(),  // Ensure these IDs match your input fields
+            location: $("#locationInput").val(),
+            return_date: $("#dateInput").val()
+        };
 
-            const status = document.getElementById('status').value;
-            const location = document.getElementById('location').value;
-            const return_date = document.getElementById('return_date').value;
-
-            fetch('/update_status', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    status: status,
-                    location: location,
-                    return_date: return_date
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-                alert('Status updated successfully!');
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+        $.ajax({
+            type: "POST",
+            url: "/update_status",
+            data: JSON.stringify(formData),
+            contentType: "application/json",
+            success: function(data) {
+                // Update the display on the page
+                $("#currentStatus").text(data.status);
+                $("#currentLocation").text(data.location);
+                $("#currentReturnDate").text(data.return_date);
+            },
+            error: function(xhr) {
+                alert("Error updating status: " + xhr.responseText);
+            }
         });
-    </script>
+    });
+
+    $(".quick-update").click(function(event) {
+        var status = $(this).data("status");
+        var location = $(this).data("location");
+
+        var formData = {
+            status: status,
+            location: location,
+            return_date: $("#currentReturnDate").text()
+        };
+
+        $.ajax({
+            type: "POST",
+            url: "/update_status",
+            data: JSON.stringify(formData),
+            contentType: "application/json",
+            success: function(data) {
+                // Update the display on the page
+                $("#currentStatus").text(data.status);
+                $("#currentLocation").text(data.location);
+                $("#currentReturnDate").text(data.return_date);
+            },
+            error: function(xhr) {
+                alert("Error updating status: " + xhr.responseText);
+            }
+        });
+    });
+
+    $("#photoForm").submit(function(event) {
+        event.preventDefault();
+
+        var formData = new FormData();
+        formData.append('photo', $("#photoInput")[0].files[0]);
+
+        $.ajax({
+            type: "POST",
+            url: "/upload_photo",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function(data) {
+                // Update the displayed photo
+                $("#uploadedPhoto").attr("src", data.photo_url);
+            },
+            error: function(xhr) {
+                alert("Error uploading photo: " + xhr.responseText);
+            }
+        });
+    });
+});
+</script>
 </body>
 </html>
