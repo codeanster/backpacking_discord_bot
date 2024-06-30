@@ -30,13 +30,19 @@ FLASK_API_URL = 'https://codeanster.pythonanywhere.com/status'
 # Define trip_status globally
 trip_status = {}
 
+# Check if command is used in a specific channel
+def in_channel(channel_name):
+    def predicate(interaction: discord.Interaction):
+        return interaction.channel.name == channel_name
+    return app_commands.check(predicate)
+
 @bot.event
 async def on_ready():
     print(f'Logged in as {bot.user}')
     for guild in bot.guilds:
         print(f'Available guild: {guild.name} (ID: {guild.id})')
 
-    guild = bot.get_guild(467594016805093407)
+    guild = bot.get_guild(721173146513702933)
     if guild is None:
         print("Guild not found or bot does not have access to the guild.")
         return
@@ -51,6 +57,7 @@ async def on_ready():
         print(f'Failed to sync commands: {e}')
 
 @tree.command(name='status', description='Get the current trip status')
+@in_channel('big-science')  # Replace with your channel name
 async def status(interaction: discord.Interaction):
     async with aiohttp.ClientSession() as session:
         async with session.get(FLASK_API_URL) as response:
@@ -67,12 +74,25 @@ async def status(interaction: discord.Interaction):
                     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
                     photo_path = f'{base_dir}/web/{photo_url}'
                     print(photo_path)
-                    #photo_path = os.path.join(base_dir, 'web', photo_url)
-                    #print(photo_path)
                     await interaction.response.send_message(status_message, file=discord.File(photo_path))
                 else:
                     await interaction.response.send_message(status_message)
             else:
                 await interaction.response.send_message("Failed to retrieve status.")
+
+# @tree.command(name='return', description='Set the estimated return date')
+# @in_channel('big-science')  # Replace with your channel name
+# @app_commands.describe(date='The estimated return date')
+# async def return_date(interaction: discord.Interaction, date: str):
+#     trip_status['return_date'] = date
+#     await interaction.response.send_message(f"Updated return date to {date}")
+
+# @tree.command(name='set_trip', description='Set the trip status and location')
+# @in_channel('big-science')  # Replace with your channel name
+# @app_commands.describe(status='The status of the trip', location='The current location')
+# async def set_trip(interaction: discord.Interaction, status: str, location: str):
+#     trip_status['status'] = status
+#     trip_status['location'] = location
+#     await interaction.response.send_message(f"Trip status updated to {status} at {location}")
 
 bot.run(DISCORD_TOKEN)
